@@ -1,0 +1,28 @@
+#pragma once
+#include "../../../structure.cuh"
+
+SyncedMemory compute_quotient_poly(
+    uint64_t n,
+    ProverKey& pk_new,
+    SyncedMemory z_poly,
+    SyncedMemory z2_poly,
+    SyncedMemory w_l_poly,
+    SyncedMemory w_r_poly,
+    SyncedMemory w_o_poly,
+    SyncedMemory w_4_poly,
+    SyncedMemory public_inputs_poly,
+    SyncedMemory f_poly,
+    SyncedMemory table_poly,
+    SyncedMemory h1_poly,
+    SyncedMemory h2_poly,
+    SyncedMemory alpha,
+    SyncedMemory beta,
+    SyncedMemory gamma,
+    SyncedMemory delta,
+    SyncedMemory epsilon,
+    SyncedMemory zeta,
+    SyncedMemory range_challenge,
+    SyncedMemory logic_challenge,
+    SyncedMemory fixed_base_challenge,
+    SyncedMemory var_base_challenge,
+    SyncedMemory lookup_challenge);
