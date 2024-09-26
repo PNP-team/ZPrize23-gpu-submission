@@ -190,23 +190,6 @@ dependencies = [
 [[package]]
 name = "ark-poly-commit"
 version = "0.3.0"
-dependencies = [
- "ark-ec",
- "ark-ff",
- "ark-nonnative-field",
- "ark-poly",
- "ark-relations",
- "ark-serialize",
- "ark-std",
- "derivative",
- "digest",
- "rayon",
- "tracing",
-]
-
-[[package]]
-name = "ark-poly-commit"
-version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a71ddfa72bad1446cab7bbecb6018dbbdc9abcbc3a0065483ae5186ad2a64dcd"
 dependencies = [
@@ -705,7 +688,7 @@ dependencies = [
  "ark-ed-on-bls12-381",
  "ark-ff",
  "ark-poly",
- "ark-poly-commit 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ark-poly-commit",
  "ark-r1cs-std",
  "ark-relations",
  "ark-serialize",
@@ -812,7 +795,7 @@ dependencies = [
  "ark-ed-on-bls12-381",
  "ark-ff",
  "ark-poly",
- "ark-poly-commit 0.3.0",
+ "ark-poly-commit",
  "ark-sponge",
  "ark-std",
  "ark-vesta",
@@ -837,7 +820,7 @@ dependencies = [
  "ark-ed-on-bls12-381",
  "ark-ff",
  "ark-poly",
- "ark-poly-commit 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ark-poly-commit",
  "ark-serialize",
  "ark-std",
  "blake2",
@@ -867,7 +850,7 @@ dependencies = [
  "ark-ed-on-bls12-381",
  "ark-ff",
  "ark-poly",
- "ark-poly-commit 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ark-poly-commit",
  "ark-r1cs-std",
  "ark-relations",
  "ark-serialize",
