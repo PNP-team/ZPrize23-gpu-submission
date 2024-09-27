@@ -382,6 +382,7 @@ struct Permutation
     SyncedMemory fourth_sigma;
 
     Permutation(SyncedMemory ls, SyncedMemory rs, SyncedMemory os, SyncedMemory fs);
+    ~Permutation(){}
 };
 
 struct Arithmetic
@@ -401,6 +402,7 @@ struct Arithmetic
                SyncedMemory qo, SyncedMemory q4, SyncedMemory qc,
                SyncedMemory qhl, SyncedMemory qhr, SyncedMemory qh4,
                SyncedMemory qarith);
+    ~Arithmetic(){}
 };
 
 struct Selectors
@@ -414,6 +416,7 @@ struct Selectors
               SyncedMemory ls,
               SyncedMemory fs,
               SyncedMemory vs);
+    ~Selectors(){}
 };
 
 

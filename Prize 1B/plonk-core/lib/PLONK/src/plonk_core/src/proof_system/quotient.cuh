@@ -3,7 +3,7 @@
 
 SyncedMemory compute_quotient_poly(
     uint64_t n,
-    ProverKey& pk_new,
+    ProverKeyC& pkc,
     SyncedMemory z_poly,
     SyncedMemory z2_poly,
     SyncedMemory w_l_poly,

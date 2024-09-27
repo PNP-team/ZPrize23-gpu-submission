@@ -141,7 +141,7 @@ SyncedMemory compute_permutation_checks(
 
 SyncedMemory compute_quotient_poly(
     uint64_t n,
-    ProverKey& pk_new,
+    ProverKeyC& pkc,
     SyncedMemory z_poly,
     SyncedMemory z2_poly,
     SyncedMemory w_l_poly,
@@ -198,20 +198,84 @@ SyncedMemory compute_quotient_poly(
     w4_eval_8n_temp = SyncedMemory();
     d_val = SyncedMemory();
 
+    SyncedMemory q_m_evals(coset_size*fr::Limbs*sizeof(uint64_t));
+    void* q_m_evals_gpu = q_m_evals.mutable_gpu_data();
+    caffe_gpu_memcpy(q_m_evals.size(), pkc.q_m_evals, q_m_evals_gpu);
+
+    SyncedMemory q_l_evals(coset_size*fr::Limbs*sizeof(uint64_t));
+    void* q_l_evals_gpu = q_l_evals.mutable_gpu_data();
+    caffe_gpu_memcpy(q_l_evals.size(), pkc.q_l_evals, q_l_evals_gpu);
+
+    SyncedMemory q_r_evals(coset_size*fr::Limbs*sizeof(uint64_t));
+    void* q_r_evals_gpu = q_r_evals.mutable_gpu_data();
+    caffe_gpu_memcpy(q_r_evals.size(), pkc.q_r_evals, q_r_evals_gpu);
+
+    SyncedMemory q_o_evals(coset_size*fr::Limbs*sizeof(uint64_t));
+    void* q_o_evals_gpu = q_o_evals.mutable_gpu_data();
+    caffe_gpu_memcpy(q_o_evals.size(), pkc.q_o_evals, q_o_evals_gpu);
+
+    SyncedMemory q_4_evals(coset_size*fr::Limbs*sizeof(uint64_t));
+    void* q_4_evals_gpu = q_4_evals.mutable_gpu_data();
+    caffe_gpu_memcpy(q_4_evals.size(), pkc.q_4_evals, q_4_evals_gpu);
+
+    SyncedMemory q_c_evals(coset_size*fr::Limbs*sizeof(uint64_t));
+    void* q_c_evals_gpu = q_c_evals.mutable_gpu_data();
+    caffe_gpu_memcpy(q_c_evals.size(), pkc.q_c_evals, q_c_evals_gpu);
+
+    SyncedMemory q_hl_evals(coset_size*fr::Limbs*sizeof(uint64_t));
+    void* q_hl_evals_gpu = q_hl_evals.mutable_gpu_data();
+    caffe_gpu_memcpy(q_hl_evals.size(), pkc.q_hl_evals, q_hl_evals_gpu);
+
+    SyncedMemory q_hr_evals(coset_size*fr::Limbs*sizeof(uint64_t));
+    void* q_hr_evals_gpu = q_hr_evals.mutable_gpu_data();
+    caffe_gpu_memcpy(q_hr_evals.size(), pkc.q_hr_evals, q_hr_evals_gpu);
+
+    SyncedMemory q_h4_evals(coset_size*fr::Limbs*sizeof(uint64_t));
+    void* q_h4_evals_gpu = q_h4_evals.mutable_gpu_data();
+    caffe_gpu_memcpy(q_h4_evals.size(), pkc.q_h4_evals, q_h4_evals_gpu);
+
+    SyncedMemory q_arith_evals(coset_size*fr::Limbs*sizeof(uint64_t));
+    void* q_arith_evals_gpu = q_arith_evals.mutable_gpu_data();
+    caffe_gpu_memcpy(q_arith_evals.size(), pkc.q_arith_evals, q_arith_evals_gpu);
+
+    Arithmetic arithmetic_evals(q_m_evals, q_l_evals, q_r_evals, q_o_evals, 
+                                    q_4_evals, q_c_evals, q_hl_evals, q_hr_evals, q_h4_evals, q_arith_evals);
+
+    SyncedMemory range_selector_evals(coset_size*fr::Limbs*sizeof(uint64_t));
+    void* range_selector_evals_gpu = range_selector_evals.mutable_gpu_data();
+    caffe_gpu_memcpy(range_selector_evals.size(), pkc.range_selector_evals, range_selector_evals_gpu);
+
+    SyncedMemory logic_selector_evals(coset_size*fr::Limbs*sizeof(uint64_t));
+    void* logic_selector_evals_gpu = logic_selector_evals.mutable_gpu_data();
+    caffe_gpu_memcpy(logic_selector_evals.size(), pkc.logic_selector_evals, logic_selector_evals_gpu);
+
+    SyncedMemory fixed_group_add_selector_evals(coset_size*fr::Limbs*sizeof(uint64_t));
+    void* fixed_group_add_selector_evals_gpu = fixed_group_add_selector_evals.mutable_gpu_data();
+    caffe_gpu_memcpy(fixed_group_add_selector_evals.size(), pkc.fixed_group_add_selector_evals, fixed_group_add_selector_evals_gpu);
+
+    SyncedMemory variable_group_add_selector_evals(coset_size*fr::Limbs*sizeof(uint64_t));
+    void* variable_group_add_selector_evals_gpu = variable_group_add_selector_evals.mutable_gpu_data();
+    caffe_gpu_memcpy(variable_group_add_selector_evals.size(), pkc.variable_group_add_selector_evals, variable_group_add_selector_evals_gpu);
+
+    Selectors selector_evals(range_selector_evals, logic_selector_evals,
+                                   fixed_group_add_selector_evals, variable_group_add_selector_evals);
+
     SyncedMemory gate_constraints = compute_gate_constraint_satisfiability(
         NTT_coset,
         range_challenge,
         logic_challenge,
         fixed_base_challenge,
         var_base_challenge,
-        pk_new.arithmetic_evals,
-        pk_new.selectors_evals,
+        arithmetic_evals,
+        selector_evals,
         wl_eval_8n,
         wr_eval_8n,
         wo_eval_8n,
         w4_eval_8n,
         public_inputs_poly
     );
+    arithmetic_evals.~Arithmetic();
+    selector_evals.~Selectors();
 
     SyncedMemory z_eval_8n_temp = NTT_coset.forward(z_poly);
     SyncedMemory z_eval_8n_head = slice(z_eval_8n_temp, 8, true);
@@ -219,11 +283,33 @@ SyncedMemory compute_quotient_poly(
     z_eval_8n_temp = SyncedMemory();
     z_eval_8n_head = SyncedMemory();
     
+    SyncedMemory linear_evaluations(coset_size*fr::Limbs*sizeof(uint64_t));
+    void* linear_evaluations_gpu = linear_evaluations.mutable_gpu_data();
+    caffe_gpu_memcpy(linear_evaluations.size(), pkc.linear_evaluations, linear_evaluations_gpu);
+
+    SyncedMemory left_sigma_evals(coset_size*fr::Limbs*sizeof(uint64_t));
+    void* left_sigma_evals_gpu = left_sigma_evals.mutable_gpu_data();
+    caffe_gpu_memcpy(left_sigma_evals.size(), pkc.left_sigma_evals, left_sigma_evals_gpu);
+
+    SyncedMemory right_sigma_evals(coset_size*fr::Limbs*sizeof(uint64_t));
+    void* right_sigma_evals_gpu = right_sigma_evals.mutable_gpu_data();
+    caffe_gpu_memcpy(right_sigma_evals.size(), pkc.right_sigma_evals, right_sigma_evals_gpu);
+
+    SyncedMemory out_sigma_evals(coset_size*fr::Limbs*sizeof(uint64_t));
+    void* out_sigma_evals_gpu = out_sigma_evals.mutable_gpu_data();
+    caffe_gpu_memcpy(out_sigma_evals.size(), pkc.out_sigma_evals, out_sigma_evals_gpu);
+
+    SyncedMemory fourth_sigma_evals(coset_size*fr::Limbs*sizeof(uint64_t));
+    void* fourth_sigma_evals_gpu = fourth_sigma_evals.mutable_gpu_data();
+    caffe_gpu_memcpy(fourth_sigma_evals.size(), pkc.fourth_sigma_evals, fourth_sigma_evals_gpu);
+
+    Permutation permutation_evals(left_sigma_evals, right_sigma_evals, out_sigma_evals, fourth_sigma_evals);
+    
     SyncedMemory permutation = compute_permutation_checks(
         n,
         NTT_coset,
-        pk_new.linear_evaluations,
-        pk_new.permutation_evals,
+        linear_evaluations,
+        permutation_evals,
         wl_eval_8n,
         wr_eval_8n,
         wo_eval_8n,
@@ -233,13 +319,18 @@ SyncedMemory compute_quotient_poly(
         beta,
         gamma
     );
-
+    linear_evaluations = SyncedMemory();
+    permutation_evals.~Permutation();
     z_eval_8n = SyncedMemory();
 
     SyncedMemory one = fr::one();
     void* one_gpu_data= one.mutable_gpu_data();
     SyncedMemory l1_poly = compute_first_lagrange_poly_scaled(n, one);
 
+    SyncedMemory q_lookup_evals(coset_size*fr::Limbs*sizeof(uint64_t));
+    void* q_lookup_evals_gpu = q_lookup_evals.mutable_gpu_data();
+    caffe_gpu_memcpy(q_lookup_evals.size(), pkc.q_lookup_evals, q_lookup_evals_gpu);
+    
     SyncedMemory lookup = compute_lookup_quotient_term(
         n,
         wl_eval_8n,
@@ -256,9 +347,9 @@ SyncedMemory compute_quotient_poly(
         epsilon,
         zeta,
         lookup_challenge,
-        pk_new.lookup_evals
+        q_lookup_evals
     );
-    
+    q_lookup_evals = SyncedMemory();
     wl_eval_8n = SyncedMemory();
     wr_eval_8n = SyncedMemory();
     wo_eval_8n = SyncedMemory();
@@ -271,7 +362,11 @@ SyncedMemory compute_quotient_poly(
     add_mod_(numerator, lookup);
     lookup = SyncedMemory();
 
-    SyncedMemory denominator = inv_mod(pk_new.v_h_coset_8n);
+    SyncedMemory v_h_coset_8n(coset_size*fr::Limbs*sizeof(uint64_t));
+    void* v_h_coset_8n_gpu = v_h_coset_8n.mutable_gpu_data();
+    caffe_gpu_memcpy(v_h_coset_8n.size(), pkc.v_h_coset_8n, v_h_coset_8n_gpu);
+
+    SyncedMemory denominator = inv_mod(v_h_coset_8n);
     SyncedMemory res = mul_mod(numerator, denominator);
     numerator = SyncedMemory();
     denominator = SyncedMemory();

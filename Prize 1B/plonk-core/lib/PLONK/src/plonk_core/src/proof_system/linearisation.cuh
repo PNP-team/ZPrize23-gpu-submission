@@ -3,7 +3,10 @@
 
 linear compute_linearisation_poly(
     Radix2EvaluationDomain domain,
-    ProverKey pk,
+    Arithmetic arithmetic_coeffs,
+    Permutation permutation_coeffs,
+    Selectors selector_coeffs,
+    LookupTable lookup_coeffs,
     SyncedMemory alpha,
     SyncedMemory beta,
     SyncedMemory gamma,

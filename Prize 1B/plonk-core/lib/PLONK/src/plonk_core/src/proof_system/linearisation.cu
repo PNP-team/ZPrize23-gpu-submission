@@ -9,7 +9,8 @@ SyncedMemory compute_gate_constraint_satisfiability(
     WireEvaluations wire_evals,
     SyncedMemory q_arith_eval,
     CustomEvaluations custom_evals,
-    ProverKey pk
+    Arithmetic arithmetic_coeffs,
+    Selectors selector_coeffs
 ) {
     
     WitnessValues wit_vals(       
@@ -24,12 +25,12 @@ SyncedMemory compute_gate_constraint_satisfiability(
         wire_evals.c_eval,
         wire_evals.d_eval,
         q_arith_eval,
-        pk.arithmetic_coeffs
+        arithmetic_coeffs
     );
 
     void* range_separation_challenge_gpu = range_separation_challenge.mutable_gpu_data();
     SyncedMemory range = range_linearisation_term(
-        pk.selectors_coeffs.range_selector,
+        selector_coeffs.range_selector,
         range_separation_challenge,
         wit_vals,
         custom_evals.from_eval()
@@ -37,7 +38,7 @@ SyncedMemory compute_gate_constraint_satisfiability(
 
     void* logic_separation_challenge_gpu_data=logic_separation_challenge.mutable_gpu_data();
     SyncedMemory logic = logic_linearisation_term(
-        pk.selectors_coeffs.logic_selector,
+        selector_coeffs.logic_selector,
         logic_separation_challenge,
         wit_vals,
         custom_evals.from_eval()
@@ -46,7 +47,7 @@ SyncedMemory compute_gate_constraint_satisfiability(
 
     void*  fixed_base_separation_challenge_gpu_data=fixed_base_separation_challenge.mutable_gpu_data();
     SyncedMemory fixed_base_scalar_mul = FBSMGate_linearisation_term(
-        pk.selectors_coeffs.fixed_group_add_selector,
+        selector_coeffs.fixed_group_add_selector,
         fixed_base_separation_challenge,
         wit_vals,
         FBSMValues::from_evaluations(custom_evals.from_eval())
@@ -55,7 +56,7 @@ SyncedMemory compute_gate_constraint_satisfiability(
     void* var_base_separation_challenge_gpu_data=var_base_separation_challenge.mutable_gpu_data();
    
     SyncedMemory curve_addition = CAGate_linearisation_term(
-        pk.selectors_coeffs.variable_group_add_selector,
+        selector_coeffs.variable_group_add_selector,
         var_base_separation_challenge,
         wit_vals,
         CAValues::from_evaluations(custom_evals.from_eval())
@@ -71,7 +72,10 @@ SyncedMemory compute_gate_constraint_satisfiability(
 
 linear compute_linearisation_poly(
     Radix2EvaluationDomain domain,
-    ProverKey pk,
+    Arithmetic arithmetic_coeffs,
+    Permutation permutation_coeffs,
+    Selectors selector_coeffs,
+    LookupTable lookup_coeffs,
     SyncedMemory alpha,
     SyncedMemory beta,
     SyncedMemory gamma,
@@ -129,9 +133,9 @@ linear compute_linearisation_poly(
 
     WireEvaluations wire_evals(a_eval, b_eval, c_eval, d_eval);
 
-    SyncedMemory left_sigma_eval = evaluate(pk.permutation_coeffs.left_sigma, z_challenge);
-    SyncedMemory right_sigma_eval = evaluate(pk.permutation_coeffs.right_sigma, z_challenge);
-    SyncedMemory out_sigma_eval = evaluate(pk.permutation_coeffs.out_sigma, z_challenge);
+    SyncedMemory left_sigma_eval = evaluate(permutation_coeffs.left_sigma, z_challenge);
+    SyncedMemory right_sigma_eval = evaluate(permutation_coeffs.right_sigma, z_challenge);
+    SyncedMemory out_sigma_eval = evaluate(permutation_coeffs.out_sigma, z_challenge);
     SyncedMemory permutation_eval = evaluate(z_poly, shifted_z_challenge);
 
     PermutationEvaluations perm_evals(
@@ -139,18 +143,18 @@ linear compute_linearisation_poly(
     );
 
   
-    SyncedMemory q_arith_eval = evaluate(pk.arithmetic_coeffs.q_arith, z_challenge);
-    SyncedMemory q_lookup_eval = evaluate(pk.lookup_coeffs.q_lookup, z_challenge);
-    SyncedMemory q_c_eval = evaluate(pk.arithmetic_coeffs.q_c, z_challenge);
-    SyncedMemory q_l_eval = evaluate(pk.arithmetic_coeffs.q_l, z_challenge);
-    SyncedMemory q_r_eval = evaluate(pk.arithmetic_coeffs.q_r, z_challenge);
+    SyncedMemory q_arith_eval = evaluate(arithmetic_coeffs.q_arith, z_challenge);
+    SyncedMemory q_lookup_eval = evaluate(lookup_coeffs.q_lookup, z_challenge);
+    SyncedMemory q_c_eval = evaluate(arithmetic_coeffs.q_c, z_challenge);
+    SyncedMemory q_l_eval = evaluate(arithmetic_coeffs.q_l, z_challenge);
+    SyncedMemory q_r_eval = evaluate(arithmetic_coeffs.q_r, z_challenge);
     SyncedMemory a_next_eval = evaluate(w_l_poly, shifted_z_challenge);
     SyncedMemory b_next_eval = evaluate(w_r_poly, shifted_z_challenge);
     SyncedMemory d_next_eval = evaluate(w_4_poly, shifted_z_challenge);
 
-    SyncedMemory q_hl_eval = evaluate(pk.arithmetic_coeffs.q_hl, z_challenge);
-    SyncedMemory q_hr_eval = evaluate(pk.arithmetic_coeffs.q_hr, z_challenge);
-    SyncedMemory q_h4_eval = evaluate(pk.arithmetic_coeffs.q_h4, z_challenge);
+    SyncedMemory q_hl_eval = evaluate(arithmetic_coeffs.q_hl, z_challenge);
+    SyncedMemory q_hr_eval = evaluate(arithmetic_coeffs.q_hr, z_challenge);
+    SyncedMemory q_h4_eval = evaluate(arithmetic_coeffs.q_h4, z_challenge);
 
 
     CustomEvaluations custom_evals(
@@ -192,7 +196,8 @@ linear compute_linearisation_poly(
         wire_evals,
         q_arith_eval,
         custom_evals,
-        pk
+        arithmetic_coeffs,
+        selector_coeffs
     );
 
     void* l1_eval_gpu_data =l1_eval.mutable_gpu_data();
@@ -219,7 +224,7 @@ linear compute_linearisation_poly(
         z2_poly,
         h1_poly,
         lookup_separation_challenge,
-        pk.lookup_coeffs.q_lookup
+        lookup_coeffs.q_lookup
     );
 
     void* alpha_gpu_data = alpha.mutable_gpu_data();
@@ -250,7 +255,7 @@ linear compute_linearisation_poly(
         permutation_eval,
         z_poly,
         domain_permutation,
-        pk.permutation_coeffs.fourth_sigma
+        permutation_coeffs.fourth_sigma
     );
 
     void* z_challenge_to_n_gpu = z_challenge_to_n.mutable_gpu_data();

@@ -9,7 +9,7 @@
 
 ProofC prove(ProverKeyC pkc, CircuitC csc, CommitKeyC ckc){
     uint64_t size = circuit_bound(csc);
-    ProverKey pk = load_pk(pkc, size);
+    // ProverKey pk = load_pk(pkc, size);
     Circuit cs = load_cs(csc);
     CommitKey ck = load_ck(ckc, size);
 
@@ -58,7 +58,28 @@ ProofC prove(ProverKeyC pkc, CircuitC csc, CommitKeyC ckc){
     void* zeta_gpu = zeta.mutable_gpu_data();
 
     // Compress lookup table into vector of single elements
-    SyncedMemory compressed_t_multiset = compress(pk.lookup_coeffs.table1, pk.lookup_coeffs.table2, pk.lookup_coeffs.table3, pk.lookup_coeffs.table4, zeta);
+    SyncedMemory q_lookup_coeffs(0);
+    void* q_lookup_coeffs_gpu = q_lookup_coeffs.mutable_gpu_data();
+    
+    SyncedMemory table1(n*fr::Limbs*sizeof(uint64_t));
+    void* table1_gpu = table1.mutable_gpu_data();
+    caffe_gpu_memcpy(table1.size(), pkc.table1, table1_gpu);
+
+    SyncedMemory table2(n*fr::Limbs*sizeof(uint64_t));
+    void* table2_gpu = table2.mutable_gpu_data();
+    caffe_gpu_memcpy(table2.size(), pkc.table2, table2_gpu);
+
+    SyncedMemory table3(n*fr::Limbs*sizeof(uint64_t));
+    void* table3_gpu = table3.mutable_gpu_data();
+    caffe_gpu_memcpy(table3.size(), pkc.table3, table3_gpu);
+
+    SyncedMemory table4(n*fr::Limbs*sizeof(uint64_t));
+    void* table4_gpu = table4.mutable_gpu_data();
+    caffe_gpu_memcpy(table4.size(), pkc.table4, table4_gpu);
+
+    LookupTable lookup_coeffs(q_lookup_coeffs, table1, table2, table3, table4);
+
+    SyncedMemory compressed_t_multiset = compress(lookup_coeffs.table1, lookup_coeffs.table2, lookup_coeffs.table3, lookup_coeffs.table4, zeta);
 
     // Compute table poly
     SyncedMemory table_poly = INTT.forward(compressed_t_multiset);
@@ -141,10 +162,26 @@ ProofC prove(ProverKeyC pkc, CircuitC csc, CommitKeyC ckc){
     w_scalars.push_back(w_4_scalar);
 
     std::vector<SyncedMemory> sigma_polys;
-    sigma_polys.push_back(pk.permutation_coeffs.left_sigma);
-    sigma_polys.push_back(pk.permutation_coeffs.right_sigma);
-    sigma_polys.push_back(pk.permutation_coeffs.out_sigma);
-    sigma_polys.push_back(pk.permutation_coeffs.fourth_sigma);
+    SyncedMemory left_sigma_coeffs(n*fr::Limbs*sizeof(uint64_t));
+    void* left_sigma_coeffs_gpu = left_sigma_coeffs.mutable_gpu_data();
+    caffe_gpu_memcpy(left_sigma_coeffs.size(), pkc.left_sigma_coeffs, left_sigma_coeffs_gpu);
+
+    SyncedMemory right_sigma_coeffs(n*fr::Limbs*sizeof(uint64_t));
+    void* right_sigma_coeffs_gpu = right_sigma_coeffs.mutable_gpu_data();
+    caffe_gpu_memcpy(right_sigma_coeffs.size(), pkc.right_sigma_coeffs, right_sigma_coeffs_gpu);
+
+    SyncedMemory out_sigma_coeffs(n*fr::Limbs*sizeof(uint64_t));
+    void* out_sigma_coeffs_gpu = out_sigma_coeffs.mutable_gpu_data();
+    caffe_gpu_memcpy(out_sigma_coeffs.size(), pkc.out_sigma_coeffs, out_sigma_coeffs_gpu);
+
+    SyncedMemory fourth_sigma_coeffs(n*fr::Limbs*sizeof(uint64_t));
+    void* fourth_sigma_coeffs_gpu = fourth_sigma_coeffs.mutable_gpu_data();
+    caffe_gpu_memcpy(fourth_sigma_coeffs.size(), pkc.fourth_sigma_coeffs, fourth_sigma_coeffs_gpu);
+
+    sigma_polys.push_back(left_sigma_coeffs);
+    sigma_polys.push_back(right_sigma_coeffs);
+    sigma_polys.push_back(out_sigma_coeffs);
+    sigma_polys.push_back(fourth_sigma_coeffs);
     
     SyncedMemory z_poly = compute_permutation_poly(domain, w_scalars, beta, gamma, sigma_polys);
     
@@ -190,7 +227,7 @@ ProofC prove(ProverKeyC pkc, CircuitC csc, CommitKeyC ckc){
 
     SyncedMemory t_poly = compute_quotient_poly(
         n,
-        pk,
+        pkc,
         z_poly,
         z_2_poly,
         w_l_poly,
@@ -233,9 +270,72 @@ ProofC prove(ProverKeyC pkc, CircuitC csc, CommitKeyC ckc){
     SyncedMemory z_challenge = transcript.challenge_scalar("z");
     transcript.append("z", z_challenge);
     void* z_challenge_gpu = z_challenge.mutable_gpu_data();
+
+    Permutation permutation_coeffs(left_sigma_coeffs, right_sigma_coeffs, out_sigma_coeffs, fourth_sigma_coeffs);
+
+    SyncedMemory q_m_coeffs(0);
+    void* q_m_coeffs_gpu = q_m_coeffs.mutable_gpu_data();
+
+    SyncedMemory q_l_coeffs(n*fr::Limbs*sizeof(uint64_t));
+    void* q_l_coeffs_gpu = q_l_coeffs.mutable_gpu_data();
+    caffe_gpu_memcpy(q_l_coeffs.size(), pkc.q_l_coeffs, q_l_coeffs_gpu);
+
+    SyncedMemory q_r_coeffs(n*fr::Limbs*sizeof(uint64_t));
+    void* q_r_coeffs_gpu = q_r_coeffs.mutable_gpu_data();
+    caffe_gpu_memcpy(q_r_coeffs.size(), pkc.q_r_coeffs, q_r_coeffs_gpu);
+
+    SyncedMemory q_o_coeffs(n*fr::Limbs*sizeof(uint64_t));
+    void* q_o_coeffs_gpu = q_o_coeffs.mutable_gpu_data();
+    caffe_gpu_memcpy(q_o_coeffs.size(), pkc.q_o_coeffs, q_o_coeffs_gpu);
+
+    SyncedMemory q_4_coeffs(n*fr::Limbs*sizeof(uint64_t));
+    void* q_4_coeffs_gpu = q_4_coeffs.mutable_gpu_data();
+    caffe_gpu_memcpy(q_4_coeffs.size(), pkc.q_4_coeffs, q_4_coeffs_gpu);
+
+    SyncedMemory q_c_coeffs(n*fr::Limbs*sizeof(uint64_t));
+    void* q_c_coeffs_gpu = q_c_coeffs.mutable_gpu_data();
+    caffe_gpu_memcpy(q_c_coeffs.size(), pkc.q_c_coeffs, q_c_coeffs_gpu);
+
+    SyncedMemory q_hl_coeffs(n*fr::Limbs*sizeof(uint64_t));
+    void* q_hl_coeffs_gpu = q_hl_coeffs.mutable_gpu_data();
+    caffe_gpu_memcpy(q_hl_coeffs.size(), pkc.q_hl_coeffs, q_hl_coeffs_gpu);
+
+    SyncedMemory q_hr_coeffs(n*fr::Limbs*sizeof(uint64_t));
+    void* q_hr_coeffs_gpu = q_hr_coeffs.mutable_gpu_data();
+    caffe_gpu_memcpy(q_hr_coeffs.size(), pkc.q_hr_coeffs, q_hr_coeffs_gpu);
+
+    SyncedMemory q_h4_coeffs(n*fr::Limbs*sizeof(uint64_t));
+    void* q_h4_coeffs_gpu = q_h4_coeffs.mutable_gpu_data();
+    caffe_gpu_memcpy(q_h4_coeffs.size(), pkc.q_h4_coeffs, q_h4_coeffs_gpu);
+
+    SyncedMemory q_arith_coeffs(n*fr::Limbs*sizeof(uint64_t));
+    void* q_arith_coeffs_gpu = q_arith_coeffs.mutable_gpu_data();
+    caffe_gpu_memcpy(q_arith_coeffs.size(), pkc.q_arith_coeffs, q_arith_coeffs_gpu);
+
+    Arithmetic arithmetic_coeffs(q_m_coeffs, q_l_coeffs, q_r_coeffs, q_o_coeffs, 
+                                     q_4_coeffs, q_c_coeffs, q_hl_coeffs, q_hr_coeffs, q_h4_coeffs, q_arith_coeffs);
+
+    SyncedMemory range_selector_coeffs(0);
+    void* range_selector_coeffs_gpu = range_selector_coeffs.mutable_gpu_data();
+
+    SyncedMemory logic_selector_coeffs(0);
+    void* logic_selector_coeffs_gpu = logic_selector_coeffs.mutable_gpu_data();
+
+    SyncedMemory fixed_group_add_selector_coeffs(0);
+    void* fixed_group_add_selector_coeffs_gpu = fixed_group_add_selector_coeffs.mutable_gpu_data();
+
+    SyncedMemory variable_group_add_selector_coeffs(0);
+    void* variable_group_add_selector_coeffs_gpu = variable_group_add_selector_coeffs.mutable_gpu_data();
+
+    Selectors selector_coeffs(range_selector_coeffs, logic_selector_coeffs,
+                                   fixed_group_add_selector_coeffs, variable_group_add_selector_coeffs);
+
     linear Linear = compute_linearisation_poly(
         domain,
-        pk,
+        arithmetic_coeffs,
+        permutation_coeffs,
+        selector_coeffs,
+        lookup_coeffs,
         alpha,
         beta,
         gamma,
@@ -310,9 +410,9 @@ ProofC prove(ProverKeyC pkc, CircuitC csc, CommitKeyC ckc){
     
     std::vector<labeldpoly> aw_polys;
     aw_polys.push_back(labeldpoly(Linear.linear_poly, NULL));
-    aw_polys.push_back(labeldpoly(pk.permutation_coeffs.left_sigma, NULL));
-    aw_polys.push_back(labeldpoly(pk.permutation_coeffs.right_sigma, NULL));
-    aw_polys.push_back(labeldpoly(pk.permutation_coeffs.out_sigma, NULL));
+    aw_polys.push_back(labeldpoly(permutation_coeffs.left_sigma, NULL));
+    aw_polys.push_back(labeldpoly(permutation_coeffs.right_sigma, NULL));
+    aw_polys.push_back(labeldpoly(permutation_coeffs.out_sigma, NULL));
     aw_polys.push_back(labeldpoly(f_poly, NULL));
     aw_polys.push_back(labeldpoly(h_2_poly, NULL));
     aw_polys.push_back(labeldpoly(table_poly, NULL));
