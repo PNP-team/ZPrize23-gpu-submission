@@ -9,19 +9,6 @@ fn assembly(
     _arch: &str,
     _is_msvc: bool,
 ) {
-        // let sfx = match _arch {
-        //     "x86_64" => "x86_64",
-        //     "aarch64" => "armv8",
-        //     _ => "unknown",
-        // };
-        // let files =
-        //     glob::glob(&format!("{}/elf/*-{}.s", base_dir.display(), sfx))
-        //         .expect("unable to collect assembly files");
-        // for file in files {
-        //     file_vec.push(file.unwrap());
-        // }
-
-
     file_vec.push(base_dir.join("assembly.S"));
     return;
 }
@@ -41,7 +28,7 @@ fn main() {
     
     let manifest_dir_2 = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
 
-    let mut blst_base_dir = manifest_dir_2.join("lib/blst");
+    let blst_base_dir = manifest_dir_2.join("lib/blst");
 
     println!("Using blst source directory {}", blst_base_dir.display());
     let mut cc = cc::Build::new();
@@ -49,11 +36,6 @@ fn main() {
     let c_src_dir = blst_base_dir.join("src");
     println!("cargo:rerun-if-changed={}", c_src_dir.display());
     let mut file_vec = vec![c_src_dir.join("server.c")];
-    // let asm_files = vec![
-    //     c_src_dir
-    // ].into_iter().flat_map(|dir| glob::glob(&format!("{}/**/*.S", dir.display())).unwrap())
-    //   .filter_map(Result::ok)
-    //   .collect::<Vec<PathBuf>>();
 
     assembly(
         &mut file_vec,
@@ -61,13 +43,6 @@ fn main() {
         &target_arch,
         cc.get_compiler().is_like_msvc(),
     );
-    // let mut file_vec = vec!["lib/blst/src/elf/sha256-x86_64.s", "lib/blst/src/elf/ctx_inverse_mod_384-x86_64.s",
-    //                                     "lib/blst/src/elf/add_mod_384-x86_64.s", "lib/blst/src/elf/add_mod_384x384-x86_64.s",
-    //                                     "lib/blst/src/elf/mulx_mont_384-x86_64.s", "lib/blst/src/elf/mulx_mont_256-x86_64.s",
-    //                                     "lib/blst/src/elf/add_mod_256-x86_64.s", "lib/blst/src/elf/ct_inverse_mod_256-x86_64.s",
-    //                                     "lib/blst/src/elf/div3w-x86_64.s", "lib/blst/src/elf/ct_is_square_mod_384-x86_64.s"];
-    // println!("Enabling ADX support via `force-adx` feature");
-    // cc.define("__ADX__", None);
     
     cc.flag_if_supported("-mno-avx") // avoid costly transitions
         .flag_if_supported("-fno-builtin")
@@ -86,54 +61,49 @@ fn main() {
     println!("cargo:rustc-link-lib=static=blstaaaa");
     println!("cargo:rerun-if-changed=lib/blst/include");
 
-    let mut nvcc = cc::Build::new();
-    nvcc.cuda(true)
-        .debug(false)
-        //.opt_level(3)
-        .no_default_flags(true)
-        .flag("-Xcompiler").flag("-gdwarf-4")
-        .opt_level(3)
-        .flag("-std=c++17")
-        .flag("-arch=sm_80");
-        // .flag("-gencode").flag("arch=compute_70,code=sm_70")
-        //.flag("--maxrregcount=128");
-        //.flag("-t0");
+    // Detect if there is CUDA compiler and engage "cuda" feature accordingly
+    let nvcc = match env::var("NVCC") {
+        Ok(var) => which::which(var),
+        Err(_) => which::which("nvcc"),
+    };
+    if nvcc.is_ok() {
+        let mut nvcc = cc::Build::new();
+        nvcc.cuda(true)
+            .debug(false)
+            //.opt_level(3)
+            .no_default_flags(true)
+            .flag("-Xcompiler").flag("-gdwarf-4")
+            .opt_level(3)
+            .flag("-std=c++17")
+            .flag("-arch=sm_80");
+            // .flag("-gencode").flag("arch=compute_70,code=sm_70")
+            //.flag("--maxrregcount=128");
+            //.flag("-t0");
 
-    // if cfg!(feature = "quiet") {
-    //     nvcc.flag("-diag-suppress=177"); // bug in the warning system.
-    // }
-    // nvcc.flag("-Xcompiler").flag("-Wno-unused-function");
+        let cpp_files = vec![
+            plonk_utils_mont_cpp,
+            plonk_utils_zkp_cpp,
+            caffe_cpp,
+            caffe_utils_cpp,
+            plonk_src_cpp,
+        ].into_iter().flat_map(|dir| glob::glob(&format!("{}/**/*.cpp", dir.display())).unwrap())
+        .filter_map(Result::ok)
+        .collect::<Vec<PathBuf>>();
 
-    // Collect all .cpp and .cu files
-    let cpp_files = vec![
-        plonk_utils_mont_cpp,
-        plonk_utils_zkp_cpp,
-        caffe_cpp,
-        caffe_utils_cpp,
-        plonk_src_cpp,
-    ].into_iter().flat_map(|dir| glob::glob(&format!("{}/**/*.cpp", dir.display())).unwrap())
-      .filter_map(Result::ok)
-      .collect::<Vec<PathBuf>>();
+        let cuda_files = vec![
+            plonk_src_cuda,
+            plonk_utils_cuda,
+        ].into_iter().flat_map(|dir| glob::glob(&format!("{}/**/*.cu", dir.display())).unwrap())
+        .filter_map(Result::ok)
+        .collect::<Vec<PathBuf>>();
 
-    let cuda_files = vec![
-        plonk_src_cuda,
-        plonk_utils_cuda,
-    ].into_iter().flat_map(|dir| glob::glob(&format!("{}/**/*.cu", dir.display())).unwrap())
-      .filter_map(Result::ok)
-      .collect::<Vec<PathBuf>>();
+        nvcc.include("lib/blst/include");
+        nvcc.files(cpp_files);
+        nvcc.files(cuda_files);
+        nvcc.file("lib/hello.cu");
 
-
-    // if let Some(include) = env::var_os("DEP_BLST_C_SRC") {
-    //     nvcc.include(include);
-    // }
-    nvcc.include("lib/blst/include");
-    nvcc.files(cpp_files);
-    nvcc.files(cuda_files);
-    nvcc.file("lib/hello.cu");
-    
-    // 编译库
-    nvcc.compile("libzprize");
-    println!("cargo:rustc-link-lib=pthread");
-
+        nvcc.compile("libzprize");
+        println!("cargo:rustc-link-lib=pthread");
+    }
 }
 
