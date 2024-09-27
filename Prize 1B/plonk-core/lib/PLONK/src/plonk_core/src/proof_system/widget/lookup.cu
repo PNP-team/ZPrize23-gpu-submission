@@ -38,10 +38,10 @@ SyncedMemory _compute_quotient_i(
     void *epsilon_one_plus_delta_gpu_data = epsilon_one_plus_delta.mutable_gpu_data();
     void *one_gpu_data = one.mutable_gpu_data();
 
-    // SyncedMemory  compressed_tuple = torch::compress(w_l_i, w_r_i, w_o_i, w_4_i, zeta);
     SyncedMemory compressed_tuple = compress(w_l_i, w_r_i, w_o_i, w_4_i, zeta);
     SyncedMemory f_i = NTT_coset.forward(f_poly);
     SyncedMemory mid_1 = sub_mod(compressed_tuple, f_i);
+    compressed_tuple = SyncedMemory();
     mul_mod_(mid_1, proverkey_q_lookup);   
     SyncedMemory a = mul_mod_scalar(mid_1, lookup_sep);
     mid_1 = SyncedMemory();

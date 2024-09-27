@@ -20,10 +20,8 @@ SyncedMemory compute_gate_constraint_satisfiability(
     SyncedMemory wo_eval_8n,
     SyncedMemory w4_eval_8n,
     SyncedMemory pi_poly) {
-
-    SyncedMemory pi_eval_8n = coset_NTT.forward(pi_poly);
     
-    int size = coset_NTT.Size;
+    uint64_t size = coset_NTT.Size;
 
     SyncedMemory a_val = slice(wl_eval_8n, size, true);
     SyncedMemory b_val = slice(wr_eval_8n, size, true);
@@ -47,9 +45,6 @@ SyncedMemory compute_gate_constraint_satisfiability(
                            arithmetics_evals.q_hr,
                            arithmetics_evals.q_h4};
     
-
-    SyncedMemory arithmetic = compute_quotient_i(arithmetics_evals, wit_vals);
-
     SyncedMemory range_term = range_quotient_term(
         selectors_evals.range_selector,
         range_challenge,
@@ -77,8 +72,12 @@ SyncedMemory compute_gate_constraint_satisfiability(
         wit_vals,
         CAValues::from_evaluations(custom_vals)
     );
-
+    
+    SyncedMemory pi_eval_8n = coset_NTT.forward(pi_poly);
+    SyncedMemory arithmetic = compute_quotient_i(arithmetics_evals, wit_vals);
     SyncedMemory gate_contributions = add_mod(arithmetic, pi_eval_8n);
+    pi_eval_8n = SyncedMemory();
+    arithmetic = SyncedMemory();
 
     add_mod_(gate_contributions, range_term);
     add_mod_(gate_contributions, logic_term);
@@ -167,9 +166,6 @@ SyncedMemory compute_quotient_poly(
     SyncedMemory lookup_challenge) {
 
     uint64_t coset_size = 8 * n;
-    SyncedMemory one = fr::one();
-    void* one_gpu_data= one.mutable_gpu_data();
-    SyncedMemory l1_poly = compute_first_lagrange_poly_scaled(n, one);
 
     Ntt_coset NTT_coset(fr::TWO_ADICITY,coset_size);
 
@@ -239,6 +235,10 @@ SyncedMemory compute_quotient_poly(
     );
 
     z_eval_8n = SyncedMemory();
+
+    SyncedMemory one = fr::one();
+    void* one_gpu_data= one.mutable_gpu_data();
+    SyncedMemory l1_poly = compute_first_lagrange_poly_scaled(n, one);
 
     SyncedMemory lookup = compute_lookup_quotient_term(
         n,

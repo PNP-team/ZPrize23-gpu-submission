@@ -128,29 +128,31 @@ SyncedMemory logic_quotient_term(
 
     SyncedMemory a_temp = mul_mod_scalar(wit_vals.a_val, four);
     SyncedMemory a = sub_mod(custom_vals.a_next, a_temp);
-    SyncedMemory c_0 = delta(a);
     a_temp = SyncedMemory();
 
     SyncedMemory b_temp = mul_mod_scalar(wit_vals.b_val, four);
     SyncedMemory b = sub_mod(custom_vals.b_next, b_temp);
     b_temp = SyncedMemory();
-    SyncedMemory c_1 = delta(b);
-    SyncedMemory res = add_mod(c_0, c_1);
-    c_0 = SyncedMemory();
-    c_1 = SyncedMemory();
 
     SyncedMemory d_temp = mul_mod_scalar(wit_vals.d_val, four);
     SyncedMemory d = sub_mod(custom_vals.d_next, d_temp);
     d_temp = SyncedMemory();
-    SyncedMemory c_2 = delta(d);
-    add_mod_(res, c_2);
-    c_2 = SyncedMemory();
-
-    SyncedMemory c_3_temp = mul_mod(a, b);
+    
     SyncedMemory c_4 = _delta_xor_and(a, b, wit_vals.c_val, d, custom_vals.q_c);
+    SyncedMemory c_2 = delta(d);
+    d = SyncedMemory();
+
+    SyncedMemory c_0 = delta(a);
+    SyncedMemory c_1 = delta(b);
+    SyncedMemory c_3_temp = mul_mod(a, b);
     a = SyncedMemory();
     b = SyncedMemory();
-    d = SyncedMemory();
+
+    SyncedMemory res = add_mod(c_0, c_1);
+    c_0 = SyncedMemory();
+    c_1 = SyncedMemory();
+    add_mod_(res, c_2);
+    c_2 = SyncedMemory();
 
     SyncedMemory c_3 = sub_mod(wit_vals.c_val, c_3_temp);
     c_3_temp = SyncedMemory();

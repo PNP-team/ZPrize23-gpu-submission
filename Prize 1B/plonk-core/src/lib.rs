@@ -50,10 +50,6 @@ pub mod proof_system;
 #[cfg(test)]
 mod test;
 
-extern "C" {
-    pub fn transfer_pp(powers_of_g: *const u64, powers_of_gamma_g: *const u64);
-}
-
 #[repr(C)]
 pub struct WireEvaluationsC {
     pub a_eval: [u64;4],

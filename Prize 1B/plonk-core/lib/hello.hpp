@@ -112,8 +112,3 @@ typedef struct {
     uint64_t* v_h_coset_8n;
 } ProverKeyC;
 
-
-extern "C" {
-    void transfer_pp(const uint64_t* powers_of_g, const uint64_t* powers_of_gamma_g);
-}
-
