@@ -269,6 +269,32 @@ where
     /// [`crate::proof_system::Proof`] and the [`PublicInputs`].
     fn gen_proof<PC>(
         &mut self,
+        u_params: &PC::UniversalParams,
+        prover_key: ProverKey<F>,
+        transcript_init: &'static [u8],
+    ) -> Result<(Proof<F, PC>, PublicInputs<F>), Error>
+    where
+        F: PrimeField,
+        P: TEModelParameters<BaseField = F>,
+        PC: HomomorphicCommitment<F>,
+    {
+        let circuit_size = self.padded_circuit_size();
+        let (ck, _) = PC::trim(u_params, circuit_size, 0, None)
+            .map_err(to_pc_error::<F, PC>)?;
+        // New Prover instance
+        let mut prover = Prover::new(transcript_init);
+        // Fill witnesses for Prover
+        self.gadget(prover.mut_cs())?;
+        // Add ProverKey to Prover
+        prover.prover_key = Some(prover_key);
+        let pi = prover.cs.get_pi().clone();
+
+        Ok((prover.prove(&ck)?, pi))
+    }
+
+    /// Generates a proof with PNP optimizations
+    fn gen_proof_pnp<PC>(
+        &mut self,
         u_params: &ark_poly_commit::kzg10::UniversalParams<ark_ec::bls12::Bls12<ark_bls12_381::Parameters>>,
         prover_key: ProverKey<F>,
         transcript_init: &'static [u8],
@@ -279,9 +305,6 @@ where
         PC: HomomorphicCommitment<F>,
     {
         let circuit_size = self.padded_circuit_size();
-        // let (ck, _) = PC::trim(u_params, circuit_size, 0, None)
-        //     .map_err(to_pc_error::<F, PC>)?;
-        // New Prover instance
         let mut prover:Prover<F, P, PC> = Prover::new(transcript_init);
         // Fill witnesses for Prover
         let start = Instant::now();
@@ -291,7 +314,7 @@ where
         prover.prover_key = Some(prover_key);
         let pi: PublicInputs<F> = prover.cs.get_pi().clone();
         
-        match prover.prove(u_params) {
+        match prover.prove_pnp(u_params) {
             Some(proof) => {
                 Ok((proof, pi))
             }

@@ -30,6 +30,9 @@ use itertools::izip;
 use merlin::Transcript;
 use std::time::Instant;
 use hashbrown::HashMap;
+use rayon::prelude::*;
+use rayon::scope;
+use std::sync::{Arc, Mutex};
 /// Abstraction structure designed to construct a circuit and generate
 /// [`Proof`]s for it.
 pub struct Prover<F, P, PC>
@@ -661,6 +664,34 @@ where
     /// also be computed.
     pub fn prove(
         &mut self,
+        commit_key: &PC::CommitterKey,
+    ) -> Result<Proof<F, PC>, Error> {
+        if self.prover_key.is_none() {
+            // Preprocess circuit and store preprocessed circuit and transcript
+            // in the Prover.
+            self.prover_key = Some(self.cs.preprocess_prover(
+                commit_key,
+                &mut self.preprocessed_transcript,
+                PhantomData::<PC>,
+            )?);
+        }
+
+        let prover_key = self.prover_key.as_ref().unwrap();
+        let proof = self.prove_with_preprocessed(
+            commit_key,
+            prover_key,
+            PhantomData::<PC>,
+        )?;
+
+        // Clear witness and reset composer variables
+        self.clear_witness();
+
+        Ok(proof)
+    }
+
+    /// proving with pnp optimizations
+    pub fn prove_pnp(
+        &mut self,
         commit_key: &ark_poly_commit::kzg10::UniversalParams<ark_ec::bls12::Bls12<ark_bls12_381::Parameters>>,
     ) -> Option<ProofC> {
         let start = Instant::now();
@@ -699,12 +730,32 @@ where
             let mut w_o_scalars = &mut self.cs.w_o;
             let mut w_4_scalars = &mut self.cs.w_4;
 
-            let mut cs_variables = &mut self.cs.variables;
+            let cs_variables = &mut self.cs.variables;
 
             let mut w_l1 = (&mut Prover::<F, P, PC>::to_scalars_mut(w_l_scalars, cs_variables) );
             let mut w_r1 = (&mut Prover::<F, P, PC>::to_scalars_mut(w_r_scalars, cs_variables) );
             let mut w_o1 = (&mut Prover::<F, P, PC>::to_scalars_mut(w_o_scalars, cs_variables) );
             let mut w_41 = (&mut Prover::<F, P, PC>::to_scalars_mut(w_4_scalars, cs_variables) );
+
+            // let mut w_l1 = Vec::new();
+            // let mut w_r1 = Vec::new();
+            // let mut w_o1 = Vec::new();
+            // let mut w_41 = Vec::new();
+
+            // scope(|s| {
+            //     s.spawn(|_| {
+            //         w_l1 = Prover::<F, P, PC>::to_scalars_mut(w_l_scalars, cs_variables);
+            //     });
+            //     s.spawn(|_| {
+            //         w_r1 = Prover::<F, P, PC>::to_scalars_mut(w_r_scalars, cs_variables);
+            //     });
+            //     s.spawn(|_| {
+            //         w_o1 = Prover::<F, P, PC>::to_scalars_mut(w_o_scalars, cs_variables);
+            //     });
+            //     s.spawn(|_| {
+            //         w_41 = Prover::<F, P, PC>::to_scalars_mut(w_4_scalars, cs_variables);
+            //     });
+            // });
 
             let (h,mut w_l,t) = w_l1.align_to_mut::<u64>();
             let (h,mut w_r,t) = w_r1.align_to_mut::<u64>();
@@ -860,8 +911,8 @@ where
         }
     }
 
-    fn to_scalars_mut(vars: &Vec<Variable>, cs_variables: &mut HashMap<Variable, F>) -> Vec<F> {
-        vars.iter().map(|var| cs_variables[var]).collect()
+    fn to_scalars_mut(vars: &Vec<Variable>, cs_variables: &HashMap<Variable, F>) -> Vec<F> {
+        vars.par_iter().map(|var| cs_variables[var]).collect()
     }
 }
 

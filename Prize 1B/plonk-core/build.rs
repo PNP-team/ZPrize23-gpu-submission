@@ -70,13 +70,12 @@ fn main() {
         let mut nvcc = cc::Build::new();
         nvcc.cuda(true)
             .debug(false)
-            //.opt_level(3)
             .no_default_flags(true)
             .flag("-Xcompiler").flag("-gdwarf-4")
             .opt_level(3)
             .flag("-std=c++17")
             .flag("-arch=sm_80");
-            // .flag("-gencode").flag("arch=compute_70,code=sm_70")
+            //.flag("-gencode").flag("arch=compute_70,code=sm_70")
             //.flag("--maxrregcount=128");
             //.flag("-t0");
 

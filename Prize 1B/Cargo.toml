@@ -51,6 +51,7 @@ ark-poly-commit = "0.3"
 blake2 = "0.9"
 criterion = "0.3"
 derivative = "2.2.0"
+merkle-tree = { path = "merkle-tree" }
 paste = "1.0.6"
 rand_core = {version = "0.6", default-features=false, features = ["getrandom"] }
 tempdir = "0.3"
@@ -60,6 +61,14 @@ ark-vesta = "0.3"
 
 [[bench]]
 name = "plonk"
+harness = false
+
+[[bench]]
+name = "zprize_bench"
+harness = false
+
+[[bench]]
+name = "pnp_bench"
 harness = false
 
 [profile.bench]

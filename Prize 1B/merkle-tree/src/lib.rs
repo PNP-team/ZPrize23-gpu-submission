@@ -17,7 +17,7 @@ pub use circuit::MerkleTreeCircuit;
 pub use path::Path;
 pub use tree::MerkleTree;
 
-pub const HEIGHT: usize = 3;
+pub const HEIGHT: usize = 15;
 
 pub type PoseidonHash = PoseidonRef<(), NativeSpecRef<Fr>, 3>;
 

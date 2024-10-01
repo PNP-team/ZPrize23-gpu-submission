@@ -802,6 +802,7 @@ dependencies = [
  "blake2",
  "criterion",
  "derivative",
+ "merkle-tree",
  "paste",
  "plonk-core",
  "plonk-hashing",
@@ -836,6 +837,7 @@ dependencies = [
  "num-traits",
  "paste",
  "rand_core 0.6.4",
+ "rayon",
  "tempdir",
  "which",
 ]

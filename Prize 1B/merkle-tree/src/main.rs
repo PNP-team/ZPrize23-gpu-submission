@@ -1,5 +1,4 @@
 use ark_bls12_381::{Bls12_381, Fr};
-use ark_crypto_primitives::commitment::blake2s::Commitment;
 use ark_ed_on_bls12_381::EdwardsParameters;
 use ark_poly_commit::PolynomialCommitment;
 use ark_std::rand::RngCore;
@@ -14,7 +13,6 @@ use plonk_core::proof_system::{Prover,Proof};
 use plonk_hashing::poseidon::constants::PoseidonConstants;
 use plonk_hashing::poseidon::poseidon_ref::NativeSpecRef;
 use std::time::Instant;
-use plonk_core::ProofC;
 use plonk_core::util;
 use ark_ff::Fp256;
 use ark_bls12_381::FrParameters;
@@ -102,7 +100,7 @@ fn main() {
                 real_circuit.gadget(prover.mut_cs()).unwrap();
                 println!("gadget1 time is {:?}", start.elapsed());
                 real_circuit
-                    .gen_proof::<KZG10<Bls12_381>>(&pp, pk, b"Merkle tree")
+                    .gen_proof_pnp::<KZG10<Bls12_381>>(&pp, pk, b"Merkle tree")
                     .unwrap()
             };
             let now = std::time::Instant::now();      
