@@ -694,7 +694,6 @@ where
         &mut self,
         commit_key: &ark_poly_commit::kzg10::UniversalParams<ark_ec::bls12::Bls12<ark_bls12_381::Parameters>>,
     ) -> Option<ProofC> {
-        let start = Instant::now();
 
         unsafe{
             let now = Instant::now();
@@ -900,12 +899,8 @@ where
                 linear_evaluations: linear_evaluations.as_mut_ptr(),
                 v_h_coset_8n: v_h_coset_8n.as_mut_ptr(),
             };
-            let transform_time = now.elapsed();
-            println!("The transform time is {:?}", transform_time);
-            let start = Instant::now();
             let proofc = gen_proof(circuit_c, prover_key_c, CommitKeyC { powers_of_g: (powers_of_g.as_ptr()), powers_of_gamma_g: (powers_of_gamma_g.as_ptr()) });
-            let elapse = start.elapsed();
-            println!("The C code time is {:?}", elapse);
+            println!("prove time is {:?}", now.elapsed());
             Some(proofc)
 
         }

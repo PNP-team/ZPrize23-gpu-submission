@@ -42,7 +42,7 @@ fn main() {
     };
 
     // pre-processing
-    let (pk, (vk, _pi_pos)) =
+    let (mut pk, (vk, _pi_pos)) =
         dummy_circuit.compile::<KZG10<Bls12_381>>(&pp).unwrap();
 
     // trace generation
@@ -55,14 +55,19 @@ fn main() {
         };
         real_circuits.push(real_circuit);
     }
-
+    
     // proof generation
-    let now = std::time::Instant::now();
+    
     println!("==============================");
     println!("Start generating {} proofs", REPEAT);
+    let mut count = 0;
     let mut proof_and_pi_s = vec![];
     for i in 0..REPEAT {
+        //time cost to clone pk should not count to proof generation
+        let pk_test = pk.clone();
+        let now = std::time::Instant::now();
         let (proofc, pi) = {
+
             let mut prover =
                 Prover::<Fr, EdwardsParameters, KZG10<Bls12_381>>::new(
                     b"Merkle tree",
@@ -71,7 +76,7 @@ fn main() {
             real_circuits[i].gadget(prover.mut_cs()).unwrap();
             println!("gadget time: {:?}", start.elapsed());
             real_circuits[i]
-                .gen_proof_pnp::<KZG10<Bls12_381>>(&pp, pk.clone(), b"Merkle tree")
+                .gen_proof_pnp::<KZG10<Bls12_381>>(&pp, pk_test, b"Merkle tree")
                 .unwrap()
         };
 
@@ -100,12 +105,14 @@ fn main() {
 
         proof_and_pi_s.push((proof, pi));
         println!("Proof {} is generated", i);
-        println!("Time elapsed: {:?}", now.elapsed());
+        let elapse = now.elapsed();
+        println!("Time elapsed: {:?}", elapse);
+        count+=elapse.as_millis();
     }
-    println!("The total prove generation time is {:?}", now.elapsed());
+    println!("The total prove generation time is {:?} s", count/1000);
     println!(
-        "Aromatized cost for each proof is {:?}",
-        now.elapsed() / REPEAT as u32
+        "Aromatized cost for each proof is {:?} s",
+        count / (1000 * REPEAT as u128)
     );
     println!("==============================");
 
