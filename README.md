@@ -5,7 +5,18 @@ The following is PNP's GPU submission to [ZPrize2023-Prize1b](https://github.com
 PNP is a team under CATS LAB, School of Cyber Science and Technology, Shandong University. We are committed to the implementation and acceleration of advanced cryptographic algorithms and protocols. Our research interests include zero-knowledge proofs and fully homomorphic encryption.
 
 ## Performance
+Our performance test is conducted on officially provided device(AMD EPYC 75F3 + NVIDIA RTX 6000 Ada) and follows the [official benchmark](https://github.com/cysic-labs/ZPrize-23-Prize1/blob/main/Prize%201B/benches/zprize_bench.rs). The benchmark test time mainly consists of three parts, two circuit gadgets(the process of synthesizing circuit and obtaining witness) and one proof generation. What we accelerate is the process of proof generation.  
 
+The inputs we use are randomly generated finite field elements. We observed that the average time taken by the benchmark was basically between **31** and **32** seconds, with the gadget taking between **9.3** and **9.5** seconds, and the actual proof generation taking between **9.5** and **10.5** seconds.  
+
+**HEIGHT=15 BENCHMARK**  
+
+| full run     | gadget     | gen_proof     |
+| ------- | ------- | ------- |
+| 31.933755031s   | 9.514367318s   | 10.07100116s   |
+| 31.584186511s  | 9.406599309s   | 9.808210833s   |
+| 31.420484675s   | 9.296232692s   | 9.965366536s   |
+| 31.61689248s  | 9.357072084s   | 10.08814598s   |
 ## Platform requirements
 All our development is based on x86_64 and linux operating system. GPU operators(e.g. NTT, MSM) in our library support all Nvidia's Volta<sup>+</sup> architecture. To be on the safe side, the end-to-end proof of tree height required by the competition needs $sm \geq 80$(Ampere<sup>+</sup>) and no less than 40GB video memory.  
 ## Building and running instructions
@@ -39,4 +50,5 @@ On the computation side, [ZPrize2022](https://www.zprize.io/blog/zprize-retrospe
 
 For an end-to-end program, the system's memory pressure far exceeds that of the calculation. In fact, each polynomial will occupy 128MB of memory under the given tree height. Our tests showed that the peak memory usage of the proof system reached 62.2GB. Throughout the protocol, the highest memory pressure occurs during the fourth step, computing the quotient polynomial. In our submission, we optimized the execution order for each module in this step to minimize the data that needs to remain on GPU. On the other hand, the high-performance operators we employed significantly reduced the system's computational complexity. However, the frequent kernel calls led to substantial interaction between the host and device, becoming a new bottleneck. Due to the fixed PCIe bandwidth of the device, we had to minimize memory transfer instances. In our submission, the twiddle factor used in NTT, the elliptic curve points for polynomial commitments, and all witness polynomials will remain on GPU during the entire process. Additionally, to manage memory more flexibly, we implemented a mini Caffe that can control dataflow, allowing us to dynamically load each part of the public key as needed and release them on-the-fly when no longer needed. Our optimization reduced the peak memory usage by at least 20GB.  
 
-BTW, in our submission, the protocol remains fully serial. The repository is still under development, we will later add support for multiple CUDA streams to enable asynchronous execution of the protocol.
+BTW, in our submission, the protocol remains fully serial. The repository is still under development, we will later add support for multiple CUDA streams to enable asynchronous execution of the protocol. For technical questions about our submission, please contact [@zlyber](https://github.com/zlyber).
+
