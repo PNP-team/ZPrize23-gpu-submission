@@ -101,7 +101,6 @@ fn main() {
                 println!("gadget1 time is {:?}", start.elapsed());
                 real_circuit
                     .gen_proof_pnp::<KZG10<Bls12_381>>(&pp, pk, b"Merkle tree")
-                    .unwrap()
             };
             let now = std::time::Instant::now();      
             let proof: Proof<Fp256<FrParameters>, KZG10<Bls12_381>> = Proof {

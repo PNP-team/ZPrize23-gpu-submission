@@ -483,5 +483,6 @@ ProofC prove(ProverKeyC pkc, CircuitC csc, CommitKeyC ckc){
             saw_opening.w.CtoR(),
             Linear.evaluations.CtoR()
         );
+
     return proof;
 }

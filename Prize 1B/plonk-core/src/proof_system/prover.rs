@@ -693,7 +693,7 @@ where
     pub fn prove_pnp(
         &mut self,
         commit_key: &ark_poly_commit::kzg10::UniversalParams<ark_ec::bls12::Bls12<ark_bls12_381::Parameters>>,
-    ) -> Option<ProofC> {
+    ) -> ProofC {
 
         unsafe{
             let now = Instant::now();
@@ -901,7 +901,7 @@ where
             };
             let proofc = gen_proof(circuit_c, prover_key_c, CommitKeyC { powers_of_g: (powers_of_g.as_ptr()), powers_of_gamma_g: (powers_of_gamma_g.as_ptr()) });
             println!("prove time is {:?}", now.elapsed());
-            Some(proofc)
+            proofc
 
         }
     }

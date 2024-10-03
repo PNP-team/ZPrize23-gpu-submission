@@ -67,19 +67,19 @@ fn main() {
         let pk_test = pk.clone();
         let now = std::time::Instant::now();
         let (proofc, pi) = {
-
+            let start = std::time::Instant::now();
             let mut prover =
                 Prover::<Fr, EdwardsParameters, KZG10<Bls12_381>>::new(
                     b"Merkle tree",
                 );
-            let start = std::time::Instant::now();
+            
             real_circuits[i].gadget(prover.mut_cs()).unwrap();
-            println!("gadget time: {:?}", start.elapsed());
+            println!("part1 time: {:?}", start.elapsed());
             real_circuits[i]
                 .gen_proof_pnp::<KZG10<Bls12_381>>(&pp, pk_test, b"Merkle tree")
-                .unwrap()
         };
-
+        let elapse = now.elapsed();
+        println!("Time elapsed: {:?}", elapse);
         let proof: Proof<Fp256<FrParameters>, KZG10<Bls12_381>> = Proof {
             a_comm: util::to_commitment(proofc.a_comm, false),
             b_comm: util::to_commitment(proofc.b_comm, false),
@@ -105,8 +105,7 @@ fn main() {
 
         proof_and_pi_s.push((proof, pi));
         println!("Proof {} is generated", i);
-        let elapse = now.elapsed();
-        println!("Time elapsed: {:?}", elapse);
+        
         count+=elapse.as_millis();
     }
     println!("The total prove generation time is {:?} s", count/1000);

@@ -298,30 +298,25 @@ where
         u_params: &ark_poly_commit::kzg10::UniversalParams<ark_ec::bls12::Bls12<ark_bls12_381::Parameters>>,
         prover_key: ProverKey<F>,
         transcript_init: &'static [u8],
-    ) -> Result<(ProofC, PublicInputs<F>), Error>
+    ) -> (ProofC, PublicInputs<F>)
     where
         F: PrimeField,
         P: TEModelParameters<BaseField = F>,
         PC: HomomorphicCommitment<F>,
     {
+        let start = Instant::now();
         let circuit_size = self.padded_circuit_size();
         let mut prover:Prover<F, P, PC> = Prover::new(transcript_init);
         // Fill witnesses for Prover
-        let start = Instant::now();
-        self.gadget(prover.mut_cs())?;
-        println!("gadget2 time is {:?}", start.elapsed());
+        
+        self.gadget(prover.mut_cs()).unwrap();
+        
         // Add ProverKey to Prover
         prover.prover_key = Some(prover_key);
         let pi: PublicInputs<F> = prover.cs.get_pi().clone();
-        
-        match prover.prove_pnp(u_params) {
-            Some(proof) => {
-                Ok((proof, pi))
-            }
-            None => {
-                Err(Error::ProofVerificationError)
-            }
-        }
+        println!("part2 time is {:?}", start.elapsed());
+        let proofc = prover.prove_pnp(u_params);
+        (proofc, pi)
     }
 
     /// Returns the Circuit size padded to the next power of two.
