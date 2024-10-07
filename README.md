@@ -5,33 +5,33 @@ The following is PNP's GPU submission to [ZPrize2023-Prize1b](https://github.com
 PNP is a team under CATS LAB, School of Cyber Science and Technology, Shandong University. We are committed to the implementation and acceleration of advanced cryptographic algorithms and protocols. Our research interests include zero-knowledge proofs and fully homomorphic encryption.
 
 ## Performance
-Our performance test is conducted on officially provided device(AMD EPYC 75F3 + NVIDIA RTX 6000 Ada) and follows the [official benchmark](https://github.com/cysic-labs/ZPrize-23-Prize1/blob/main/Prize%201B/benches/zprize_bench.rs). The benchmark test time mainly consists of three parts, clone pk(we moved this part outside the timing scope because this is not required in a real proof generation, just for the security requirements of rust programming in benchmark), circuit gadget(the process of synthesizing circuit and obtaining witness, twice per proof) and proof generation. **What we accelerate is the process of proof generation.**  
+Our performance test is conducted on officially provided device(AMD EPYC 75F3 + NVIDIA RTX 6000 Ada) and follows the [official benchmark](https://github.com/cysic-labs/ZPrize-23-Prize1/blob/main/Prize%201B/benches/zprize_bench.rs). The benchmark test time mainly consists of three parts, clone pk(we moved this part outside the timing scope because this is not required in a real proof generation, just for the security check of rust programming in benchmark), circuit gadget(the process of synthesizing circuit and obtaining witness, twice per proof) and proof generation. **What we accelerate is the process of proof generation.**  
 
 The inputs we use are randomly generated finite field elements. We observed that the average time taken by the benchmark was basically between **31** and **32** seconds, with the gadget taking between **9** and **10** seconds, and the actual proof generation taking between **9.5** and **10.5** seconds.  
 
 **HEIGHT=15 BENCHMARK**  
 
-| full run     | gadget(once)     | gen_proof     |
-| ------- | ------- | ------- |
-| 31.933755031s   | 9.514367318s   | 10.07100116s   |
-| 31.584186511s  | 9.406599309s   | 9.808210833s   |
-| 31.420484675s   | 9.296232692s   | 9.965366536s   |
-| 31.61689248s  | 9.357072084s   | 10.08814598s   |
+| full run     |clone pk | gadget(once)     | gen_proof     |
+| ------- | ------- | ------- |------- |
+| 31.933755031s | 11.356669964s | 9.514367318s   | 10.07100116s   |
+| 31.584186511s | 11.114444828s | 9.406599309s   | 9.808210833s   |
+| 31.420484675s  | 10.926322927s | 9.296232692s   | 9.965366536s   |
+| 31.61689248s  | 10.941579919s | 9.357072084s   | 10.08814598s   |
 ## Platform requirements
 All our development is based on x86_64 and linux operating system. GPU operators(e.g. NTT, MSM) in our library support all Nvidia's Volta<sup>+</sup> architecture. To be on the safe side, the end-to-end proof of tree height required by the competition needs $sm \geq 80$(Ampere<sup>+</sup>) and no less than 40GB video memory.  
 ## Building and running instructions
 First, install [CUDA12](https://developer.nvidia.com/cuda-toolkit-archive) and [Rust](https://www.rust-lang.org/tools/install).  
-To test performance please run this  
+To run the benchmark: 
 
 ```cargo bench --bench submission_bench```   
 
-You can also run the source directly. We recommend running the program in release mode instead of debug mode to achieve better performance.  
+To test performance please run the source code direcly(removed clone pk). We recommend running the program in release mode instead of debug mode to achieve better performance.  
 
 ```cargo run --package merkle-tree --bin merkle-tree --release``` 
 
 ## Repository structure
 Our implementation's structure is generally consistent with the [official harness repo](https://github.com/cysic-labs/ZPrize-23-Prize1/tree/main/Prize%201B). All new additions are in one directory `/plonk-core/lib`. In other files, we only added some data type conversions and modified the access permissions of some class members. 
-* benches - benchmark codes include the classic [PLONK](https://eprint.iacr.org/2019/953.pdf), the official baseline offered by cysic and our submission.
+* benches - benchmark codes include the zk-Garage's PLONK protocol, the official baseline offered by cysic and our submission.
 * examples - some exmaple circuits of the plonk arithmetization.
 * merkle-tree - the front end, source codes for generating a Poseidon Merkle Tree and the corresponding contraints.
 * plonk-book - a tutorial of PLONK.
