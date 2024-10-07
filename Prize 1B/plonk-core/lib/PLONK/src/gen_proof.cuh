@@ -105,6 +105,7 @@ ProofC prove(ProverKeyC pkc, CircuitC csc, CommitKeyC ckc){
     transcript.append("f", f_poly_commit[0].commitment);
 
     // Compute s, as the sorted and concatenated version of f and t
+    // we skipped the combine_split because both f and t are all zeros in this scenario.
     SyncedMemory h_1(compressed_t_multiset.size());
     SyncedMemory h_2(compressed_f_multiset.size());
 

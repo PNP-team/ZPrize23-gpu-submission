@@ -304,17 +304,16 @@ where
         P: TEModelParameters<BaseField = F>,
         PC: HomomorphicCommitment<F>,
     {
-        let start = Instant::now();
+        
         let circuit_size = self.padded_circuit_size();
         let mut prover:Prover<F, P, PC> = Prover::new(transcript_init);
         // Fill witnesses for Prover
-        
+        let start = Instant::now();
         self.gadget(prover.mut_cs()).unwrap();
-        
+        println!("gadget2 time is {:?}", start.elapsed());
         // Add ProverKey to Prover
         prover.prover_key = Some(prover_key);
         let pi: PublicInputs<F> = prover.cs.get_pi().clone();
-        println!("part2 time is {:?}", start.elapsed());
         let proofc = prover.prove_pnp(u_params);
         (proofc, pi)
     }
