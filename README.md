@@ -5,13 +5,13 @@ The following is PNP's GPU submission to [ZPrize2023-Prize1b](https://github.com
 PNP is a team under CATS LAB, School of Cyber Science and Technology, Shandong University. We are committed to the implementation and acceleration of advanced cryptographic algorithms and protocols. Our research interests include zero-knowledge proofs and fully homomorphic encryption.
 
 ## Performance
-Our performance test is conducted on officially provided device(AMD EPYC 75F3 + NVIDIA RTX 6000 Ada) and follows the [official benchmark](https://github.com/cysic-labs/ZPrize-23-Prize1/blob/main/Prize%201B/benches/zprize_bench.rs). The benchmark test time mainly consists of three parts, two circuit gadgets(the process of synthesizing circuit and obtaining witness) and one proof generation. What we accelerate is the process of proof generation.  
+Our performance test is conducted on officially provided device(AMD EPYC 75F3 + NVIDIA RTX 6000 Ada) and follows the [official benchmark](https://github.com/cysic-labs/ZPrize-23-Prize1/blob/main/Prize%201B/benches/zprize_bench.rs). The benchmark test time mainly consists of three parts, clone pk(we moved this part outside the timing scope because this is not required in a real proof generation, just for the security requirements of rust programming in benchmark), circuit gadget(the process of synthesizing circuit and obtaining witness, twice per proof) and proof generation. **What we accelerate is the process of proof generation.**  
 
-The inputs we use are randomly generated finite field elements. We observed that the average time taken by the benchmark was basically between **31** and **32** seconds, with the gadget taking between **9.3** and **9.5** seconds, and the actual proof generation taking between **9.5** and **10.5** seconds.  
+The inputs we use are randomly generated finite field elements. We observed that the average time taken by the benchmark was basically between **31** and **32** seconds, with the gadget taking between **9** and **10** seconds, and the actual proof generation taking between **9.5** and **10.5** seconds.  
 
 **HEIGHT=15 BENCHMARK**  
 
-| full run     | gadget     | gen_proof     |
+| full run     | gadget(once)     | gen_proof     |
 | ------- | ------- | ------- |
 | 31.933755031s   | 9.514367318s   | 10.07100116s   |
 | 31.584186511s  | 9.406599309s   | 9.808210833s   |
