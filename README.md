@@ -1,6 +1,6 @@
 # ZPrize23-Prize1b
 ## TL;DR
-The following is PNP's GPU submission to [ZPrize2023-Prize1b](https://github.com/cysic-labs/ZPrize-23-Prize1/tree/main/Prize%201B) —— EtoE Proof Acceleration of a 15-level Poseidon-Merkle Tree.  
+The following is PNP's GPU submission to [ZPrize2023-Prize1b](https://github.com/cysic-labs/ZPrize-23-Prize1/tree/main/Prize%201B) —— EtoE Proof Acceleration of a 15-level Poseidon Merkle-Tree.  
 
 PNP is a team under CATS LAB, School of Cyber Science and Technology, Shandong University. We are committed to the implementation and acceleration of advanced cryptographic algorithms and protocols. Our research interests include zero-knowledge proofs and fully homomorphic encryption.
 
