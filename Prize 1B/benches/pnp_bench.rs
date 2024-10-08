@@ -1,3 +1,5 @@
+use std::clone;
+
 use ark_bls12_381::{Bls12_381, Fr};
 use ark_ed_on_bls12_381::EdwardsParameters;
 use ark_ff::Fp256;
@@ -57,7 +59,7 @@ fn main() {
     }
     
     // proof generation
-    
+    let mut waste_time = std::time::Duration::new(0, 0);
     let now = std::time::Instant::now();
     println!("==============================");
     println!("Start generating {} proofs", REPEAT);
@@ -65,20 +67,21 @@ fn main() {
     for i in 0..REPEAT {
         //time cost to clone pk should not count to proof generation
         let start = std::time::Instant::now();
-        let pk_test = pk.clone();
-        println!("clone time: {:?}", start.elapsed());
+        let pk_cloned = pk.clone();
+        let clone_time = start.elapsed();
+        waste_time += clone_time;
+        println!("clone time: {:?}", clone_time);
 
         let (proofc, pi) = {
-            let start = std::time::Instant::now();
+
             let mut prover =
                 Prover::<Fr, EdwardsParameters, KZG10<Bls12_381>>::new(
                     b"Merkle tree",
                 );
-            let start = std::time::Instant::now();
+
             real_circuits[i].gadget(prover.mut_cs()).unwrap();
-            println!("gadget1 time: {:?}", start.elapsed());
             real_circuits[i]
-                .gen_proof_pnp::<KZG10<Bls12_381>>(&pp, pk_test, b"Merkle tree")
+                .gen_proof_pnp::<KZG10<Bls12_381>>(&pp, pk_cloned, b"Merkle tree")
         };
 
         let proof: Proof<Fp256<FrParameters>, KZG10<Bls12_381>> = Proof {
@@ -106,12 +109,12 @@ fn main() {
 
         proof_and_pi_s.push((proof, pi));
         println!("Proof {} is generated", i);
-        println!("Time elapsed: {:?}", now.elapsed());
+        println!("Time elapse: {:?}", now.elapsed()-clone_time);
     }
-    println!("The total prove generation time is {:?}", now.elapsed());
+    println!("The total prove generation time is {:?}", now.elapsed()-waste_time);
     println!(
         "Aromatized cost for each proof is {:?}",
-        now.elapsed() / REPEAT as u32
+        (now.elapsed()-waste_time) / REPEAT as u32
     );
     println!("==============================");
 
