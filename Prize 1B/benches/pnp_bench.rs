@@ -109,7 +109,7 @@ fn main() {
 
         proof_and_pi_s.push((proof, pi));
         println!("Proof {} is generated", i);
-        println!("Time elapse: {:?}", now.elapsed()-clone_time);
+        println!("Time elapse: {:?}", now.elapsed()-waste_time);
     }
     println!("The total prove generation time is {:?}", now.elapsed()-waste_time);
     println!(
