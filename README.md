@@ -21,6 +21,11 @@ The inputs we use are randomly generated finite field elements. We observed that
 All our development is based on x86_64 and linux operating system. GPU operators(e.g. NTT, MSM) in our library support all Nvidia's Volta<sup>+</sup> architecture. To be on the safe side, the end-to-end proof of tree height required by the competition needs $sm \geq 80$(Ampere<sup>+</sup>) and no less than 40GB video memory.  
 ## Building and running instructions
 First, install [CUDA12](https://developer.nvidia.com/cuda-toolkit-archive) and [Rust](https://www.rust-lang.org/tools/install).  
+Then clone our repository locally and enter
+```
+git clone https://github.com/PNP-team/ZPrize23-gpu-submission.git  
+cd ZPrize23-gpu-submission/Prize\ 1B  
+```
 To run the benchmark: 
 
 ```cargo bench --bench submission_bench```   
@@ -30,7 +35,7 @@ To test performance please run the source code direcly(removed clone pk). We rec
 ```cargo run --package merkle-tree --bin merkle-tree --release``` 
 
 ## Repository structure
-Our implementation's structure is generally consistent with the [official harness repo](https://github.com/cysic-labs/ZPrize-23-Prize1/tree/main/Prize%201B). All new additions are in one directory `/plonk-core/lib`. In other files, we only added some data type conversions and modified the access permissions of some class members. 
+Our implementation's structure is generally consistent with the [official harness repo](https://github.com/cysic-labs/ZPrize-23-Prize1/tree/main/Prize%201B). All new additions are in one directory `/Prize\ 1B/plonk-core/lib`. In other files, we only added some data type conversions and modified the access permissions of some class members. 
 * benches - benchmark codes include the ZK-Garage's PLONK, the official baseline offered by cysic and our submission.
 * examples - some exmaple circuits of the plonk arithmetization.
 * merkle-tree - the front end, source codes for generating a Poseidon Merkle Tree and the corresponding contraints.
