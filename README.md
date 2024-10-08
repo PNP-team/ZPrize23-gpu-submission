@@ -31,7 +31,7 @@ To test performance please run the source code direcly(removed clone pk). We rec
 
 ## Repository structure
 Our implementation's structure is generally consistent with the [official harness repo](https://github.com/cysic-labs/ZPrize-23-Prize1/tree/main/Prize%201B). All new additions are in one directory `/plonk-core/lib`. In other files, we only added some data type conversions and modified the access permissions of some class members. 
-* benches - benchmark codes include the zk-Garage's PLONK protocol, the official baseline offered by cysic and our submission.
+* benches - benchmark codes include the ZK-Garage's PLONK, the official baseline offered by cysic and our submission.
 * examples - some exmaple circuits of the plonk arithmetization.
 * merkle-tree - the front end, source codes for generating a Poseidon Merkle Tree and the corresponding contraints.
 * plonk-book - a tutorial of PLONK.
