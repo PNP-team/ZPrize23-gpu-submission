@@ -20,7 +20,8 @@ The inputs we use are randomly generated finite field elements. We observed that
 ## Platform requirements
 All our development is based on x86_64 and linux operating system. GPU operators(e.g. NTT, MSM) in our library support all Nvidia's Volta<sup>+</sup> architecture. To be on the safe side, the end-to-end proof of tree height required by the competition needs $sm \geq 80$(Ampere<sup>+</sup>) and no less than 40GB video memory.  
 ## Building and running instructions
-First, install [CUDA12](https://developer.nvidia.com/cuda-toolkit-archive) and [Rust](https://www.rust-lang.org/tools/install).  
+First, install [CUDA12](https://developer.nvidia.com/cuda-toolkit-archive) and [Rust](https://www.rust-lang.org/tools/install). 
+
 Then clone our repository locally and enter
 ```
 git clone https://github.com/PNP-team/ZPrize23-gpu-submission.git  
