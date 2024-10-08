@@ -7,16 +7,16 @@ PNP is a team under CATS LAB, School of Cyber Science and Technology, Shandong U
 ## Performance
 Our performance test is conducted on officially provided device(AMD EPYC 75F3 + NVIDIA RTX 6000 Ada) and follows the [official benchmark](https://github.com/cysic-labs/ZPrize-23-Prize1/blob/main/Prize%201B/benches/zprize_bench.rs). The benchmark test time mainly consists of three parts, clone pk(we moved this part outside the timing scope because this is not required in a real proof generation, just for the security check of rust programming in benchmark), circuit gadget(the process of synthesizing circuit and obtaining witness, twice per proof) and proof generation. **What we accelerate is the process of proof generation.**  
 
-The inputs we use are randomly generated finite field elements. We observed that the average time taken by the benchmark was basically between **31** and **32** seconds, with the gadget taking between **9** and **10** seconds, and the actual proof generation taking between **9.5** and **10.5** seconds.  
+The inputs we use are randomly generated finite field elements. We observed that the average time taken by the benchmark was basically between **31** and **32** seconds, with the gadget taking between **9** and **10** seconds, and the actual proof generation taking between **9** and **10.5** seconds.  
 
 **HEIGHT=15 BENCHMARK**  
 
 | full run     |clone pk | gadget(once)     | gen_proof     |
 | ------- | ------- | ------- |------- |
-| 31.933755031s | 11.356669964s | 9.514367318s   | 10.07100116s   |
-| 31.584186511s | 11.114444828s | 9.406599309s   | 9.808210833s   |
-| 31.420484675s  | 10.926322927s | 9.296232692s   | 9.965366536s   |
-| 31.61689248s  | 10.941579919s | 9.357072084s   | 10.08814598s   |
+| 31.706375668s | 11.36129334s | 9.514367318s   | 9.543495451s   |
+| 31.242246s | 11.151423209s | 9.406599309s   | 9.337866544s   |
+| 31.191829727s  | 11.11506527s | 9.296232692s   | 9.287114947s   |
+| 31.253646885s  | 10.849541569s | 9.357072084s   | 9.309883876s   |
 ## Platform requirements
 All our development is based on x86_64 and linux operating system. GPU operators(e.g. NTT, MSM) in our library support all Nvidia's Volta<sup>+</sup> architecture. To be on the safe side, the end-to-end proof of tree height required by the competition needs $sm \geq 80$(Ampere<sup>+</sup>) and no less than 40GB video memory.  
 ## Building and running instructions
